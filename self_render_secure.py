@@ -462,8 +462,8 @@ async def main():
             logger.error("❌ Failed to setup client")
             return
         
-        # Add event handlers with proper filters
-        client.add_event_handler(admin_handler, events.NewMessage(chats=ADMIN_ID))
+        # Add event handlers - remove chats filter to receive all messages
+        client.add_event_handler(admin_handler, events.NewMessage)
         client.add_event_handler(callback_handler, events.CallbackQuery)
         
         logger.info("✅ Bot handlers registered successfully")
