@@ -195,10 +195,13 @@ async def text_to_speech(text, lang='en'):
         logger.error(f"TTS error: {e}")
         return None
 
-@events.NewMessage(chats=ADMIN_ID)
 async def admin_handler(event):
     """Handle admin messages."""
     try:
+        # Check if message is from admin
+        if event.sender_id != ADMIN_ID:
+            return
+        
         message = event.message
         text = message.text or ""
         
@@ -300,7 +303,6 @@ async def show_help(event):
     
     await event.respond(help_text)
 
-@events.CallbackQuery
 async def callback_handler(event):
     """Handle callback queries."""
     try:
@@ -354,8 +356,8 @@ async def main():
             logger.error("❌ Failed to setup client")
             return
         
-        # Add event handlers
-        client.add_event_handler(admin_handler, events.NewMessage)
+        # Add event handlers with proper filters
+        client.add_event_handler(admin_handler, events.NewMessage(chats=ADMIN_ID))
         client.add_event_handler(callback_handler, events.CallbackQuery)
         
         logger.info("✅ Bot handlers registered successfully")
