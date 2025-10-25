@@ -19,6 +19,22 @@ import json
 import aiohttp
 from datetime import datetime
 import pytz
+from gtts import gTTS
+import io
+import re
+
+# Initialize logging immediately
+logging.basicConfig(
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    level=logging.INFO,
+    handlers=[
+        logging.FileHandler('bot.log'),
+        logging.StreamHandler()
+    ]
+)
+
+logger = logging.getLogger(__name__)
+
 # Translation services (optional due to Python 3.13 compatibility)
 try:
     from googletrans import Translator
@@ -26,10 +42,6 @@ try:
 except ImportError:
     GOOGLETRANS_AVAILABLE = False
     logger.warning("⚠️ googletrans not available - translation features disabled")
-
-from gtts import gTTS
-import io
-import re
 
 # Secure configuration using environment variables
 API_ID = os.getenv('TELEGRAM_API_ID')
@@ -45,18 +57,6 @@ if not all([API_ID, API_HASH]):
 
 if not SESSION_STRING:
     logging.warning("⚠️ TELEGRAM_SESSION_STRING not set. Bot may need authentication.")
-
-# Initialize logging
-logging.basicConfig(
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    level=logging.INFO,
-    handlers=[
-        logging.FileHandler('bot.log'),
-        logging.StreamHandler()
-    ]
-)
-
-logger = logging.getLogger(__name__)
 
 # Global variables
 client = None
