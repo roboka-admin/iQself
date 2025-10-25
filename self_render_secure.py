@@ -72,12 +72,9 @@ async def setup_client():
         if SESSION_STRING:
             # Use session string for quick authentication
             logger.info("🔑 Using session string for authentication")
-            client = TelegramClient(SESSION_NAME, API_ID, API_HASH)
+            from telethon.sessions import StringSession
+            client = TelegramClient(StringSession(SESSION_STRING), API_ID, API_HASH)
             await client.start()
-            # Load session string if available
-            await client.session.set_dc(2, "149.154.164.5", 443)
-            await client.session.auth_key = await client.session.generate_auth_key()
-            await client.session.save()
         else:
             # Use traditional authentication
             logger.info("🔐 Starting traditional authentication")
