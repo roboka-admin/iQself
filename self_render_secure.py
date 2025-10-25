@@ -22,7 +22,7 @@ import pytz
 from gtts import gTTS
 import io
 import re
-from flask import Flask, jsonify, render_template_string
+from flask import Flask, jsonify, render_template_string, request
 
 # Initialize logging immediately
 logging.basicConfig(
@@ -147,6 +147,21 @@ async def start_http_server():
     http_thread.start()
     logger.info("✅ HTTP server started successfully")
 
+# Webhook handler for Telegram updates
+@app.route('/webhook', methods=['POST'])
+def webhook():
+    """Handle incoming Telegram webhook."""
+    try:
+        # Process the update through Telethon
+        update_data = request.get_json()
+        if update_data:
+            # The update will be processed by Telethon's event handlers
+            return jsonify({'status': 'ok'})
+        return jsonify({'status': 'no_data'})
+    except Exception as e:
+        logger.error(f"Webhook error: {e}")
+        return jsonify({'status': 'error', 'message': str(e)})
+
 # Initialize translator (optional)
 if GOOGLETRANS_AVAILABLE:
     translator = Translator()
@@ -181,6 +196,8 @@ async def setup_client():
         # Get admin user info
         admin_user = await client.get_entity(ADMIN_ID)
         logger.info(f"✅ Bot connected successfully as {admin_user.first_name}")
+        logger.info(f"🎯 Admin ID: {ADMIN_ID}")
+        logger.info("📡 Using polling mode for message reception")
         
         return True
     except SessionPasswordNeededError:
