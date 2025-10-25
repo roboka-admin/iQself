@@ -8,6 +8,7 @@ This version uses environment variables for sensitive data
 import os
 import asyncio
 import logging
+import time
 from telethon import TelegramClient, events, Button
 from telethon.errors import SessionPasswordNeededError, PhoneCodeInvalidError, PhoneNumberInvalidError
 from telethon.tl.types import User, Chat, Channel
@@ -133,7 +134,7 @@ def status():
     })
 
 # HTTP server thread
-async def start_http_server():
+def start_http_server():
     """Start HTTP server in a separate thread."""
     import threading
     import time
@@ -146,6 +147,7 @@ async def start_http_server():
     http_thread = threading.Thread(target=run_server, daemon=True)
     http_thread.start()
     logger.info("✅ HTTP server started successfully")
+    return http_thread
 
 # Webhook handler for Telegram updates
 @app.route('/webhook', methods=['POST'])
@@ -448,29 +450,21 @@ async def callback_handler(event):
         logger.error(f"Callback handler error: {e}")
         await event.answer(f"❌ Error: {str(e)}")
 
-async def main():
+def main():
     """Main function."""
     try:
         logger.info("🚀 Starting Telegram Self-Bot with HTTP Server...")
         
-        # Start HTTP server first
-        await start_http_server()
-        await asyncio.sleep(2)  # Give HTTP server time to start
+        # Start HTTP server first (not await)
+        http_thread = start_http_server()
+        time.sleep(3)  # Give HTTP server time to start
         
-        # Setup client
-        if not await setup_client():
-            logger.error("❌ Failed to setup client")
-            return
+        # Start event loop for async operations
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
         
-        # Add event handlers - remove chats filter to receive all messages
-        client.add_event_handler(admin_handler, events.NewMessage)
-        client.add_event_handler(callback_handler, events.CallbackQuery)
-        
-        logger.info("✅ Bot handlers registered successfully")
-        logger.info("🌐 Bot is ready! Both HTTP server and Telegram bot are running")
-        
-        # Keep bot running
-        await client.run_until_disconnected()
+        # Setup client and run bot
+        loop.run_until_complete(run_bot())
     
     except KeyboardInterrupt:
         logger.info("🛑 Bot stopped by user")
@@ -478,7 +472,24 @@ async def main():
         logger.error(f"❌ Unexpected error: {e}")
     finally:
         if client:
-            await client.disconnect()
+            loop.run_until_complete(client.disconnect())
+
+async def run_bot():
+    """Run the bot with event handlers."""
+    # Setup client
+    if not await setup_client():
+        logger.error("❌ Failed to setup client")
+        return
+    
+    # Add event handlers - remove chats filter to receive all messages
+    client.add_event_handler(admin_handler, events.NewMessage)
+    client.add_event_handler(callback_handler, events.CallbackQuery)
+    
+    logger.info("✅ Bot handlers registered successfully")
+    logger.info("🌐 Bot is ready! Both HTTP server and Telegram bot are running")
+    
+    # Keep bot running
+    await client.run_until_disconnected()
 
 if __name__ == "__main__":
     # Run the main async function
