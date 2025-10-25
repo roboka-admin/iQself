@@ -1,0 +1,91 @@
+# Telegram Self-Bot - Secure .gitignore
+
+# =============================================================================
+# PYTHON
+# =============================================================================
+**/__pycache__/
+**/*.py[cod]
+**/*$py.class
+**/*.so
+**/.Python
+**/build/
+**/dist/
+**/*.egg-info/
+**/.eggs/
+**/pip-log.txt
+
+# Virtual environments
+**/.env
+**/.venv
+**/env/
+**/venv/
+**/ENV/
+
+# IDE
+**/.vscode/
+**/.idea/
+**/*.swp
+**/*.swo
+
+# OS
+**/.DS_Store
+**/Thumbs.db
+
+# =============================================================================
+# TELEGRAM SPECIFIC
+# =============================================================================
+# Session files (contain sensitive data)
+*.session
+*.session-journal
+
+# Configuration files (may contain secrets)
+config.json
+secrets.json
+.env.local
+.env.production
+
+# Logs
+bot.log
+helper_bot.log
+*.log
+
+# Temporary files
+tmp/
+*.tmp
+
+# =============================================================================
+# DEPLOYMENT FILES
+# =============================================================================
+# Original files with hardcoded credentials (keep out of version control)
+self.py
+helper.py
+requirements.txt
+start.sh
+main.py
+
+# Deployment guides with credentials
+README.md
+DEPLOYMENT_GUIDE.md
+
+# Temporary images
+*.jpg
+*.jpeg
+*.png
+*.gif
+
+# =============================================================================
+# RENDER DEPLOYMENT
+# =============================================================================
+# Production build files
+build/
+dist/
+
+# Environment specific files
+.env
+.env.*
+
+# =============================================================================
+# SYSTEM FILES
+# =============================================================================
+workspace.json
+user_input_files/

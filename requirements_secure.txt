@@ -1,0 +1,39 @@
+# Telegram Self-Bot System - Requirements
+# Secure version with environment variables
+
+# Core Telegram libraries
+telethon>=1.34.0
+
+# Web framework and HTTP client
+flask>=3.0.0
+aiohttp>=3.9.0
+
+# System monitoring
+psutil>=5.9.0
+
+# Data visualization
+matplotlib>=3.7.0
+numpy>=1.24.0
+
+# Async utilities
+aiofiles>=23.0.0
+aiocron>=1.0.0
+
+# Time and timezone
+pytz>=2023.3
+
+# Translation services
+googletrans==4.0.0rc1
+
+# Text-to-speech
+gtts>=2.4.0
+
+# Google services
+google-play-scraper>=2.2.0
+
+# HTTP server for production
+gunicorn>=21.0.0
+
+# Additional utilities
+py-tgcalls>=1.3.0
+requests>=2.31.0
