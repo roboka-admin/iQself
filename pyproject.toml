@@ -53,6 +53,7 @@ dependencies = [
  "mypy>=1.16.1",
  # PDF处理
  "weasyprint>=65.1",
+ "telethon>=1.41.2",
 ]
 
 [build-system]
