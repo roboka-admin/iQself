@@ -22,6 +22,7 @@ import pytz
 from gtts import gTTS
 import io
 import re
+from flask import Flask, jsonify, render_template_string
 
 # Initialize logging immediately
 logging.basicConfig(
@@ -61,6 +62,90 @@ if not SESSION_STRING:
 # Global variables
 client = None
 admin_user = None
+app = Flask(__name__)
+
+# Health check endpoints for Render
+@app.route('/')
+def home():
+    """Home page with bot status."""
+    return render_template_string("""
+    <html>
+        <head>
+            <title>Telegram Self-Bot</title>
+            <meta charset="utf-8">
+            <style>
+                body { font-family: Arial, sans-serif; margin: 40px; }
+                .status { padding: 20px; border-radius: 5px; margin: 10px 0; }
+                .online { background-color: #d4edda; border: 1px solid #c3e6cb; color: #155724; }
+                .info { background-color: #d1ecf1; border: 1px solid #bee5eb; color: #0c5460; }
+                h1 { color: #333; }
+                .emoji { font-size: 24px; }
+            </style>
+        </head>
+        <body>
+            <h1>🤖 Telegram Self-Bot</h1>
+            <div class="status online">
+                <span class="emoji">✅</span> <strong>Bot Status:</strong> Running & Connected
+            </div>
+            <div class="status info">
+                <span class="emoji">📊</span> <strong>Service:</strong> Web Worker with Telegram Integration
+            </div>
+            <div class="status info">
+                <span class="emoji">🚀</span> <strong>Platform:</strong> Render Cloud
+            </div>
+            <div class="status info">
+                <span class="emoji">🔧</span> <strong>Commands:</strong> /start, /stats, /chart, /time, /help
+            </div>
+            <p>Use the bot commands in Telegram to interact with this service.</p>
+        </body>
+    </html>
+    """)
+
+@app.route('/health')
+def health_check():
+    """Health check endpoint for Render."""
+    return jsonify({
+        'status': 'healthy',
+        'service': 'telegram_self_bot',
+        'bot_connected': client is not None and client.is_connected() if client else False,
+        'timestamp': datetime.now(pytz.UTC).isoformat()
+    })
+
+@app.route('/status')
+def status():
+    """Detailed status endpoint."""
+    try:
+        system_stats = {
+            'cpu': f"{psutil.cpu_percent():.1f}%",
+            'memory': f"{psutil.virtual_memory().percent:.1f}%",
+            'disk': f"{psutil.disk_usage('/').percent:.1f}%"
+        }
+    except:
+        system_stats = {'error': 'Unable to get system stats'}
+    
+    return jsonify({
+        'service': 'telegram_self_bot',
+        'bot_connected': client is not None and client.is_connected() if client else False,
+        'admin_id': ADMIN_ID,
+        'session_string_available': bool(SESSION_STRING),
+        'system_stats': system_stats,
+        'timestamp': datetime.now(pytz.UTC).isoformat()
+    })
+
+# HTTP server thread
+async def start_http_server():
+    """Start HTTP server in a separate thread."""
+    import threading
+    import time
+    
+    def run_server():
+        port = int(os.getenv('PORT', 8080))
+        logger.info(f"🌐 Starting HTTP server on port {port}")
+        app.run(host='0.0.0.0', port=port, debug=False)
+    
+    http_thread = threading.Thread(target=run_server, daemon=True)
+    http_thread.start()
+    logger.info("✅ HTTP server started successfully")
 
 # Initialize translator (optional)
 if GOOGLETRANS_AVAILABLE:
@@ -349,7 +434,11 @@ async def callback_handler(event):
 async def main():
     """Main function."""
     try:
-        logger.info("🚀 Starting Telegram Self-Bot...")
+        logger.info("🚀 Starting Telegram Self-Bot with HTTP Server...")
+        
+        # Start HTTP server first
+        await start_http_server()
+        await asyncio.sleep(2)  # Give HTTP server time to start
         
         # Setup client
         if not await setup_client():
@@ -361,6 +450,7 @@ async def main():
         client.add_event_handler(callback_handler, events.CallbackQuery)
         
         logger.info("✅ Bot handlers registered successfully")
+        logger.info("🌐 Bot is ready! Both HTTP server and Telegram bot are running")
         
         # Keep bot running
         await client.run_until_disconnected()
@@ -374,4 +464,5 @@ async def main():
             await client.disconnect()
 
 if __name__ == "__main__":
+    # Run the main async function
     asyncio.run(main())
