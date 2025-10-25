@@ -41,7 +41,14 @@ Configure these environment variables in your deployment platform:
 TELEGRAM_API_ID=your_api_id_here
 TELEGRAM_API_HASH=your_api_hash_here
 TELEGRAM_ADMIN_ID=your_admin_user_id
-TELEGRAM_SESSION_NAME=self_bot
+
+# Authentication (choose ONE method)
+# Method 1: Session String (Recommended)
+TELEGRAM_SESSION_STRING=your_session_string_here
+
+# Method 2: Traditional Login (not recommended for cloud)
+TELEGRAM_PHONE=+1234567890
+TELEGRAM_PASSWORD=your_password
 
 # Required for Helper Bot
 TELEGRAM_BOT_TOKEN=your_bot_token_here
@@ -50,9 +57,44 @@ TELEGRAM_ADMIN_ID=your_admin_user_id
 # Optional Configuration
 WEBHOOK_PORT=5000
 WEBHOOK_HOST=0.0.0.0
+TELEGRAM_SESSION_NAME=self_bot
 ```
 
-### 2. Install Dependencies
+### 2. Generate Session String (Recommended)
+
+#### Option A: Use Session String Generator
+1. **Run the generator script:**
+   ```bash
+   python session_generator.py
+   ```
+2. **Enter your credentials when prompted:**
+   - API ID and API Hash
+   - Phone number
+   - Verification code
+   - 2FA password (if enabled)
+3. **Copy the session string** from the output
+4. **Add to Render environment:**
+   ```
+   TELEGRAM_SESSION_STRING=your_generated_session_string
+   ```
+
+#### Option B: Manual Session Creation
+1. **Install dependencies locally:**
+   ```bash
+   pip install telethon
+   ```
+2. **Run authentication script:**
+   ```bash
+   python -c "
+   from telethon import TelegramClient
+   client = TelegramClient('session', API_ID, API_HASH)
+   client.start()
+   session_string = client.session.save()
+   print(session_string)
+   "
+   ```
+
+### 3. Install Dependencies
 
 ```bash
 pip install -r requirements_secure.txt
@@ -145,9 +187,22 @@ The bot provides inline keyboard menu for easy navigation.
 | `TELEGRAM_API_HASH` | ✅ | Your Telegram API Hash |
 | `TELEGRAM_ADMIN_ID` | ✅ | Admin user ID |
 | `TELEGRAM_BOT_TOKEN` | ✅ | Bot token for helper |
+| `TELEGRAM_SESSION_STRING` | ⚡ | Session string (recommended) |
 | `TELEGRAM_SESSION_NAME` | ❌ | Session file name (default: self_bot) |
 | `WEBHOOK_PORT` | ❌ | Webhook server port (default: 5000) |
 | `WEBHOOK_HOST` | ❌ | Webhook server host (default: 0.0.0.0) |
+
+### Authentication Methods
+
+#### Method 1: Session String (Recommended)
+- **Secure**: No passwords stored in environment
+- **Portable**: Easy backup and restoration
+- **Cloud-friendly**: Perfect for deployment platforms
+
+#### Method 2: Traditional Login
+- **Variables**: `TELEGRAM_PHONE`, `TELEGRAM_PASSWORD`
+- **Less secure**: Password stored in environment
+- **Manual**: Requires manual login on server startup
 
 ## 📊 Features
 

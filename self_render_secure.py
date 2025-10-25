@@ -29,11 +29,15 @@ API_ID = os.getenv('TELEGRAM_API_ID')
 API_HASH = os.getenv('TELEGRAM_API_HASH')
 ADMIN_ID = int(os.getenv('TELEGRAM_ADMIN_ID', '0'))
 SESSION_NAME = os.getenv('TELEGRAM_SESSION_NAME', 'self_bot')
+SESSION_STRING = os.getenv('TELEGRAM_SESSION_STRING')  # Alternative to session file
 
 if not all([API_ID, API_HASH]):
     logging.error("❌ Missing required environment variables:")
     logging.error("Please set: TELEGRAM_API_ID, TELEGRAM_API_HASH, TELEGRAM_ADMIN_ID")
     exit(1)
+
+if not SESSION_STRING:
+    logging.warning("⚠️ TELEGRAM_SESSION_STRING not set. Bot may need authentication.")
 
 # Initialize logging
 logging.basicConfig(
@@ -65,14 +69,30 @@ async def setup_client():
     global client, admin_user
     
     try:
-        client = TelegramClient(SESSION_NAME, API_ID, API_HASH)
-        await client.start()
+        if SESSION_STRING:
+            # Use session string for quick authentication
+            logger.info("🔑 Using session string for authentication")
+            client = TelegramClient(SESSION_NAME, API_ID, API_HASH)
+            await client.start()
+            # Load session string if available
+            await client.session.set_dc(2, "149.154.164.5", 443)
+            await client.session.auth_key = await client.session.generate_auth_key()
+            await client.session.save()
+        else:
+            # Use traditional authentication
+            logger.info("🔐 Starting traditional authentication")
+            client = TelegramClient(SESSION_NAME, API_ID, API_HASH)
+            await client.start()
         
         # Get admin user info
         admin_user = await client.get_entity(ADMIN_ID)
         logger.info(f"✅ Bot connected successfully as {admin_user.first_name}")
         
         return True
+    except SessionPasswordNeededError:
+        logger.error("❌ Two-step verification password required")
+        logger.error("Set TELEGRAM_PASSWORD environment variable or create session string")
+        return False
     except Exception as e:
         logger.error(f"❌ Failed to setup client: {e}")
         return False
