@@ -19,7 +19,14 @@ import json
 import aiohttp
 from datetime import datetime
 import pytz
-from googletrans import Translator
+# Translation services (optional due to Python 3.13 compatibility)
+try:
+    from googletrans import Translator
+    GOOGLETRANS_AVAILABLE = True
+except ImportError:
+    GOOGLETRANS_AVAILABLE = False
+    logger.warning("⚠️ googletrans not available - translation features disabled")
+
 from gtts import gTTS
 import io
 import re
@@ -54,7 +61,12 @@ logger = logging.getLogger(__name__)
 # Global variables
 client = None
 admin_user = None
-translator = Translator()
+
+# Initialize translator (optional)
+if GOOGLETRANS_AVAILABLE:
+    translator = Translator()
+else:
+    translator = None
 
 async def setup_matplotlib():
     """Setup matplotlib for plotting with proper configuration."""
@@ -161,6 +173,9 @@ async def create_system_chart():
 
 async def translate_text(text, dest='en'):
     """Translate text using Google Translate."""
+    if not translator:
+        return "❌ Translation service not available"
+    
     try:
         result = translator.translate(text, dest=dest)
         return result.text
